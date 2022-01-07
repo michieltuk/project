@@ -184,9 +184,9 @@ runs.append(run6)
 yields = data_estimation.to_numpy()
 
 for r in runs:
-    print(f'''Starting run {r['run_id']}''')
+    print(f'''Starting run {r['run_id']}, {r['run_run_description']}''')
 
-    print('Initialising yield cuve model...')
+    print('Initialising yield curve model...')
 
     model = YieldCurveModel(yields,
                             maturities,
