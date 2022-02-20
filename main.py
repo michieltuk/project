@@ -97,7 +97,7 @@ print('Done loading data')
 # %%
 # Set up data
 
-validation_holdout = 1000 # 252*2
+validation_holdout = 252 # 252*2
 
 # Split estimation and validation data
 data_estimation = data_clean.iloc[0:-validation_holdout]
@@ -113,8 +113,10 @@ results_summary = []
 # %%
 # Set up runs
 
-forecast_horizon = 50
-burn_in = 100
+forecast_horizon = 66
+reestimation_frequency = 126
+reestimation_window = 3 * 252
+burn_in = reestimation_window #252
 
 runs = []
 
@@ -126,6 +128,8 @@ run_base = {
     'forecasting_model': 'var',
     'forecasting_settings': {'lag_order': 1},
     'forecasting_horizon': forecast_horizon,
+    'reestimation_frequency': reestimation_frequency,
+    'reestimation_window': reestimation_window,
     'burn_in': burn_in,
     'start_date_estimation': dates_estimation[0],
     'end_date_estimation': dates_estimation[-1],
@@ -157,12 +161,12 @@ run4['forecasting_settings']['order'] = (1, 0, 0)
 run5 = copy.deepcopy(run_base)
 run5['run_id'] = 5
 run5['forecasting_model'] = 'arima'
-run5['run_description'] = 'ARIMA(1,0,1)'
-run5['forecasting_settings']['order'] = (1, 0, 1)
+run5['run_description'] = 'ARIMA(2,1,2)'
+run5['forecasting_settings']['order'] = (2, 1, 2)
 
 run6 = copy.deepcopy(run_base)
 run6['run_id'] = 6
-run6['run_description'] = 'RW'
+run6['run_description'] = 'Random walk'
 run6['forecasting_model'] = 'rw'
 run6['forecasting_settings'] = {}
 
@@ -172,10 +176,10 @@ run7['forecasting_model'] = 'rnn'
 run7['forecasting_settings']['ltsm_nodes'] = 3
 run7['forecasting_settings']['time_steps'] = 22
 
-runs.append(run1)
-runs.append(run2)
-runs.append(run3)
-runs.append(run4)
+#runs.append(run1)
+#runs.append(run2)
+# runs.append(run3)
+#runs.append(run4)
 runs.append(run5)
 runs.append(run6)
 
@@ -184,7 +188,7 @@ runs.append(run6)
 yields = data_estimation.to_numpy()
 
 for r in runs:
-    print(f'''Starting run {r['run_id']}, {r['run_run_description']}''')
+    print(f'''Starting run {r['run_id']}, {r['run_description']}''')
 
     print('Initialising yield curve model...')
 
@@ -204,7 +208,7 @@ for r in runs:
 
     print('Forecasting factors...')
     factors_forecast = model.rolling_factor_forecast(
-        forecast_horizon=r['forecasting_horizon'], burn_in=r['burn_in'])
+        forecast_horizon=r['forecasting_horizon'], burn_in=r['burn_in'], reestimation_frequency=r['reestimation_frequency'], reestimation_window=r['reestimation_window'])
     r['factor_forecast_metrics'] = diagnostics.performance_summary(factors, factors_forecast)
     
     print('Forecasting yields...')
@@ -215,7 +219,7 @@ for r in runs:
     charts.plot_forecasts(factors, factors_forecast,
                           dates_estimation, dates_estimation)
 
-    r.update(model.statistics)
+    #r.update(model.statistics)
 
 results_summary.extend(runs)
 results_summary_df = pd.DataFrame(results_summary)

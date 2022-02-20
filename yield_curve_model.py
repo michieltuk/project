@@ -47,10 +47,10 @@ class YieldCurveModel:
         if self.forecasting_model == 'rw':
             self.forecasting_class = RWForecasting()
 
-    def rolling_factor_forecast(self, forecast_horizon=1, burn_in=100):
+    def rolling_factor_forecast(self, forecast_horizon=1, burn_in=100, reestimation_frequency=1, reestimation_window=None):
 
         self.factor_forecasts = self.forecasting_class.rolling_forecast(
-            self.factor_estimates, forecast_horizon=forecast_horizon, burn_in=burn_in)
+            self.factor_estimates, forecast_horizon=forecast_horizon, burn_in=burn_in, reestimation_frequency=reestimation_frequency, reestimation_window=reestimation_window)
 
         self.statistics['factor_forecasts_RMSE'] = sklearn.metrics.mean_squared_error(
             self.factor_estimates[burn_in+forecast_horizon, :], self.factor_forecasts[burn_in+forecast_horizon, :], squared=False)
